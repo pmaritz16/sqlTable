@@ -1,0 +1,6 @@
+name:string, age:number, email:string, salary:number
+John Doe, 30, john.doe@example.com, 50000
+Jane Smith, 25, jane.smith@example.com, 60000
+Bob Johnson, 35, bob.johnson@example.com, 75000
+Alice Williams, 28, alice.williams@example.com, 55000
+

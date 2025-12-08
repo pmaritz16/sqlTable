@@ -1,0 +1,20 @@
+product_id:number, product_name:string, category:string, price:number, stock:number, in_stock:string
+1001, Laptop Pro 15, Electronics, 1299.99, 45, true
+1002, Wireless Mouse, Electronics, 29.99, 120, true
+1003, Mechanical Keyboard, Electronics, 89.99, 78, true
+1004, USB-C Cable, Electronics, 12.99, 200, true
+1005, Monitor 27 inch, Electronics, 349.99, 30, true
+1006, Webcam HD, Electronics, 79.99, 0, false
+1007, Desk Chair, Furniture, 199.99, 25, true
+1008, Standing Desk, Furniture, 499.99, 15, true
+1009, Desk Lamp, Furniture, 39.99, 50, true
+1010, Bookshelf, Furniture, 149.99, 8, true
+
+
+
+
+
+
+
+
+

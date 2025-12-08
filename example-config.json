@@ -1,0 +1,7 @@
+{
+  "databasePath": "C:\\Tools\\cursor\\sqlTable\\csv-database.sqlite",
+  "csvFiles": [
+    "C:\\Tools\\cursor\\sqlTable\\example-data.csv",
+    "C:\\Tools\\cursor\\sqlTable\\example-products.csv"
+  ]
+}
