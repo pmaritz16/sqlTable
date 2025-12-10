@@ -2,15 +2,19 @@
   import { onMount } from 'svelte';
   import ConfigManager from './config.js';
   import DatabaseManager from './database.js';
+  import LogManager from './logManager.js';
   import { CSVParser } from './csvParser.js';
   import TableViewer from './TableViewer.svelte';
   import LoadingIndicator from './LoadingIndicator.svelte';
   import ConfigPreview from './ConfigPreview.svelte';
   import TableManager from './TableManager.svelte';
+  import CommandInput from './CommandInput.svelte';
+  import LogViewer from './LogViewer.svelte';
 
   let configManager;
   let dbManager;
-  let currentView = 'loading'; // 'configPreview', 'loading', 'viewer'
+  let logManager;
+  let currentView = 'loading'; // 'configPreview', 'loading', 'viewer', 'logView'
   let config = null;
   let configPath = null;
   let tables = [];
@@ -19,10 +23,43 @@
   let loadingMessage = '';
   let errorMessage = '';
   let appVersion = '';
+  let currentTableSchema = [];
+  let llmStatus = null;
+  let showLLMStatus = true;
 
   onMount(async () => {
+    // Listen for LLM status from main process
+    window.addEventListener('llm-status', (event) => {
+      llmStatus = event.detail;
+      console.log('LLM Status:', llmStatus);
+    });
+    
     console.log('App mounted, checking for electronAPI...');
     console.log('window.electronAPI:', window.electronAPI);
+    
+    // Request LLM status if not received within 1 second (fallback)
+    setTimeout(async () => {
+      if (!llmStatus && window.electronAPI && window.electronAPI.testOllamaConnection) {
+        try {
+          const result = await window.electronAPI.testOllamaConnection();
+          llmStatus = {
+            connected: result.success,
+            message: result.success 
+              ? `Ollama connected successfully`
+              : `Ollama not available: ${result.error || result.message || 'Connection failed'}`,
+            host: result.host || 'localhost',
+            port: result.port || '11434',
+            error: result.error,
+            suggestion: result.suggestion
+          };
+        } catch (error) {
+          llmStatus = {
+            connected: false,
+            message: `Failed to test Ollama connection: ${error.message}`
+          };
+        }
+      }
+    }, 1000);
     
     if (window.electronAPI) {
       try {
@@ -36,6 +73,8 @@
         await configManager.initialize();
         dbManager = new DatabaseManager();
         await dbManager.initialize();
+        logManager = new LogManager(window.electronAPI);
+        await logManager.initialize();
         console.log('Initialization complete');
         
         // Automatically load default config
@@ -179,6 +218,7 @@
     
     if (tables.length > 0) {
       currentTable = tables[0];
+      updateTableSchema();
     }
     
     // Show summary message if files were skipped
@@ -209,6 +249,15 @@
     const tableName = event.detail?.table;
     if (tableName) {
       currentTable = tableName;
+      updateTableSchema();
+    }
+  }
+
+  function updateTableSchema() {
+    if (dbManager && currentTable) {
+      currentTableSchema = dbManager.getTableSchema(currentTable);
+    } else {
+      currentTableSchema = [];
     }
   }
 
@@ -217,8 +266,69 @@
       tables = dbManager.getTableNames();
       if (tables.length > 0 && !tables.includes(currentTable)) {
         currentTable = tables[0];
+        updateTableSchema();
+      } else if (currentTable) {
+        updateTableSchema();
       }
     }
+  }
+
+  function toggleView() {
+    if (currentView === 'viewer') {
+      currentView = 'logView';
+    } else if (currentView === 'logView') {
+      currentView = 'viewer';
+    }
+  }
+
+  async function handleCommandResult(event) {
+    const result = event.detail;
+    if (!logManager) return;
+
+    // Format and append to log
+    const logEntry = logManager.formatLogEntry(result);
+    const currentLog = await logManager.loadLog();
+    const newLog = currentLog + (currentLog ? '\n' : '') + logEntry;
+    await logManager.saveLog(newLog);
+  }
+
+  async function handleExecuteSQL(event) {
+    const { sql, naturalLanguage } = event.detail;
+    if (!dbManager || !currentTable) {
+      errorMessage = 'No table selected or database not available';
+      return;
+    }
+
+    let result = null;
+    let error = null;
+
+    try {
+      result = dbManager.executeSQL(sql);
+      // Save database if modified
+      if (config && result.type === 'modify') {
+        await dbManager.saveToFile(config.databasePath, window.electronAPI);
+        // Refresh table data
+        handleRefresh();
+      }
+    } catch (err) {
+      error = err.message || 'SQL execution failed';
+    }
+
+    // Save to log
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    await handleCommandResult({
+      detail: {
+        naturalLanguage,
+        sql,
+        error,
+        result: result ? (result.type === 'select' ? `Returned ${result.rowCount} row(s)` : `Affected ${result.affectedRows} row(s)`) : null,
+        timestamp
+      }
+    });
+  }
+
+  $: if (currentTable && dbManager) {
+    updateTableSchema();
   }
 </script>
 
@@ -232,6 +342,18 @@
   {#if appVersion}
     <div class="version-banner">
       Version {appVersion}
+    </div>
+  {/if}
+  {#if showLLMStatus && llmStatus}
+    <div class="llm-status-banner {llmStatus.connected ? 'connected' : 'disconnected'}">
+      <div class="llm-status-content">
+        <span class="llm-status-icon">{llmStatus.connected ? '✓' : '✗'}</span>
+        <span class="llm-status-message">{llmStatus.message}</span>
+        {#if llmStatus.suggestion}
+          <span class="llm-status-suggestion">({llmStatus.suggestion})</span>
+        {/if}
+      </div>
+      <button class="llm-status-close" on:click={() => showLLMStatus = false} title="Dismiss">×</button>
     </div>
   {/if}
   {#if errorMessage}
@@ -259,14 +381,40 @@
   {:else if currentView === 'loading'}
     <LoadingIndicator message={loadingMessage} />
   {:else if currentView === 'viewer'}
-    <TableViewer
-      {tables}
-      {currentTable}
-      {dbManager}
-      tableToCsvMap={tableToCsvMap}
-      on:tableSelect={handleTableSelect}
-      on:refresh={handleRefresh}
-    />
+    <div class="viewer-container">
+      <div class="view-toggle">
+        <button class="toggle-button active">Table View</button>
+        <button class="toggle-button" on:click={toggleView}>Log View</button>
+      </div>
+      <CommandInput
+        {currentTable}
+        tableSchema={currentTableSchema}
+        electronAPI={window.electronAPI}
+        on:executeSQL={handleExecuteSQL}
+      />
+      <TableViewer
+        {tables}
+        {currentTable}
+        {dbManager}
+        tableToCsvMap={tableToCsvMap}
+        on:tableSelect={handleTableSelect}
+        on:refresh={handleRefresh}
+      />
+    </div>
+  {:else if currentView === 'logView'}
+    <div class="viewer-container">
+      <div class="view-toggle">
+        <button class="toggle-button" on:click={toggleView}>Table View</button>
+        <button class="toggle-button active">Log View</button>
+      </div>
+      <LogViewer
+        {logManager}
+        {dbManager}
+        {currentTable}
+        electronAPI={window.electronAPI}
+        on:refresh={handleRefresh}
+      />
+    </div>
   {/if}
 </div>
 
@@ -309,6 +457,110 @@
     font-size: 12px;
     text-align: right;
     border-bottom: 1px solid #cce4f0;
+  }
+
+  .llm-status-banner {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .llm-status-banner.connected {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-bottom-color: #a7f3d0;
+  }
+
+  .llm-status-banner.disconnected {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-bottom-color: #fecaca;
+  }
+
+  .llm-status-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .llm-status-icon {
+    font-weight: bold;
+    font-size: 16px;
+  }
+
+  .llm-status-message {
+    flex: 1;
+  }
+
+  .llm-status-suggestion {
+    font-size: 12px;
+    opacity: 0.8;
+    font-style: italic;
+  }
+
+  .llm-status-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .llm-status-close:hover {
+    opacity: 1;
+  }
+
+  .llm-status-banner.connected .llm-status-close {
+    color: #065f46;
+  }
+
+  .llm-status-banner.disconnected .llm-status-close {
+    color: #991b1b;
+  }
+
+  .viewer-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .view-toggle {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 0;
+  }
+
+  .toggle-button {
+    flex: 1;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-button:hover {
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  .toggle-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: #f0f4ff;
   }
 </style>
 

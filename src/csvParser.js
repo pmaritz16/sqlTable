@@ -3,6 +3,9 @@ export class CSVParser {
     const columns = [];
     const parts = line.split(',');
     
+    // Valid type modifiers
+    const validTypes = ['string', 'number', 'boolean'];
+    
     for (const part of parts) {
       const trimmed = part.trim();
       if (!trimmed) continue;
@@ -11,9 +14,15 @@ export class CSVParser {
       if (colonIndex > 0) {
         const name = trimmed.substring(0, colonIndex).trim();
         const type = trimmed.substring(colonIndex + 1).trim().toLowerCase();
+        
+        // Validate type modifier
+        if (!validTypes.includes(type)) {
+          throw new Error(`Invalid column type modifier "${type}" for column "${name}". Valid types are: string, number, boolean`);
+        }
+        
         columns.push({
           name: name,
-          type: type === 'number' ? 'number' : 'string'
+          type: type
         });
       } else {
         columns.push({
@@ -50,7 +59,12 @@ export class CSVParser {
           if (isNaN(row[col.name])) {
             row[col.name] = null;
           }
+        } else if (col.type === 'boolean') {
+          // Convert to boolean: true for "true", "1", "yes", "y" (case-insensitive), false otherwise
+          const lowerValue = value.toLowerCase();
+          row[col.name] = lowerValue === 'true' || lowerValue === '1' || lowerValue === 'yes' || lowerValue === 'y';
         } else {
+          // string type (default)
           row[col.name] = value;
         }
       });

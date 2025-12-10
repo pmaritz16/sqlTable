@@ -1,0 +1,522 @@
+[2025-12-10 01:22:28]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: flights\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "add a new column called \"Total\" and set the value of its fields to be the sum of \"PIC\" and \"Dual\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T01:22:28.0947287Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nALTER TABLE flights ADD COLUMN Total REAL;\nUPDATE flights SET Total = PIC + Dual;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 38691556900,
+  "load_duration": 61548700,
+  "prompt_eval_count": 461,
+  "prompt_eval_duration": 35197117400,
+  "eval_count": 27,
+  "eval_duration": 3231355900
+}
+---
+[2025-12-10 02:57:18]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: flights\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "join table \"flights\" to table \"types\" on column \"Type\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T02:57:18.4742055Z",
+  "message": {
+    "role": "assistant",
+    "content": "SELECT * FROM flights INNER JOIN types ON flights.Type = types.type;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 40524519000,
+  "load_duration": 3219212400,
+  "prompt_eval_count": 472,
+  "prompt_eval_duration": 34950809100,
+  "eval_count": 19,
+  "eval_duration": 2190659300
+}
+---
+[2025-12-10 02:59:51]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: flights\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "join table \"flights\" to table \"types\" on column \"Type\" and store the results in a new table called \"expanded\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T02:59:51.7910983Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nCREATE TABLE expanded AS SELECT * FROM flights INNER JOIN types ON flights.Type = types.type;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 4631854300,
+  "load_duration": 64806500,
+  "prompt_eval_count": 485,
+  "prompt_eval_duration": 1517109600,
+  "eval_count": 24,
+  "eval_duration": 3022985200
+}
+---
+[2025-12-10 03:06:17]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new column called \"SEL_time\" and set the value of its fields to equal to \"Total\" if the Class is equal to \"SEL\" else set it to 0"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:06:17.0824887Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nALTER TABLE expanded ADD COLUMN SEL_time REAL DEFAULT (CASE WHEN Class = 'SEL' THEN Total ELSE 0 END);"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 46860388700,
+  "load_duration": 63360600,
+  "prompt_eval_count": 594,
+  "prompt_eval_duration": 42742622000,
+  "eval_count": 32,
+  "eval_duration": 4009846400
+}
+---
+[2025-12-10 03:08:27]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new column called \"SEL_time\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:08:27.8668471Z",
+  "message": {
+    "role": "assistant",
+    "content": "ALTER TABLE expanded ADD COLUMN SEL_time REAL;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 2852474800,
+  "load_duration": 60197600,
+  "prompt_eval_count": 565,
+  "prompt_eval_duration": 616299000,
+  "eval_count": 15,
+  "eval_duration": 2151695600
+}
+---
+[2025-12-10 03:10:07]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "set the value of SEL_time to be equal to Total is the field Class is equal to \"SEL\" else set it 0"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:10:07.1668999Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nUPDATE expanded SET SEL_time = (CASE WHEN Class = 'SEL' THEN Total ELSE 0 END);"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 10372106400,
+  "load_duration": 62684500,
+  "prompt_eval_count": 610,
+  "prompt_eval_duration": 7295612300,
+  "eval_count": 26,
+  "eval_duration": 2986857200
+}
+---
+[2025-12-10 03:11:25]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "add a column called MEL_time"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:11:25.652528Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nALTER TABLE expanded ADD COLUMN MEL_time REAL;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3322041200,
+  "load_duration": 58210100,
+  "prompt_eval_count": 589,
+  "prompt_eval_duration": 1167369900,
+  "eval_count": 16,
+  "eval_duration": 2073358800
+}
+---
+[2025-12-10 03:12:45]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "set the value of MEL_time to be equal to Total if the field Class is equal to \"MEL\" else set it 0"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:12:45.4468631Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nUPDATE expanded SET MEL_time = IF(Class = 'MEL', Total, 0);"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 11898884800,
+  "load_duration": 60869000,
+  "prompt_eval_count": 637,
+  "prompt_eval_duration": 8945636500,
+  "eval_count": 23,
+  "eval_duration": 2856761300
+}
+---
+[2025-12-10 03:14:07]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new column called \"Tailwheel_time\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:14:07.4076824Z",
+  "message": {
+    "role": "assistant",
+    "content": "ALTER TABLE expanded ADD COLUMN Tailwheel_time REAL;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3676525200,
+  "load_duration": 60695200,
+  "prompt_eval_count": 621,
+  "prompt_eval_duration": 1525855600,
+  "eval_count": 17,
+  "eval_duration": 2064420200
+}
+---
+[2025-12-10 03:16:18]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "set the value of Tailwheel_time to equal to Total if the field Tailwheel is > 0 else set it to 0"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:16:18.3890153Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nUPDATE expanded\nSET Tailwheel_time = (CASE WHEN Tailwheel > 0 THEN Total ELSE 0 END);"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 13025421200,
+  "load_duration": 66357000,
+  "prompt_eval_count": 668,
+  "prompt_eval_duration": 9202928000,
+  "eval_count": 30,
+  "eval_duration": 3715141800
+}
+---
+[2025-12-10 03:17:24]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new column called \"Turbine_time\""
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:17:24.6899968Z",
+  "message": {
+    "role": "assistant",
+    "content": "ALTER TABLE expanded ADD COLUMN Turbine_time REAL;"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 3382550100,
+  "load_duration": 63863900,
+  "prompt_eval_count": 649,
+  "prompt_eval_duration": 1488968600,
+  "eval_count": 15,
+  "eval_duration": 1806752200
+}
+---
+[2025-12-10 03:18:24]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "set the value of Turbine_time to equal to Total if the field Turbine is > 0 else set it to 0"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+RESPONSE:
+{
+  "model": "codellama",
+  "created_at": "2025-12-10T03:18:24.9353826Z",
+  "message": {
+    "role": "assistant",
+    "content": "\nUPDATE expanded SET Turbine_time = (CASE WHEN Turbine > 0 THEN Total ELSE 0 END);"
+  },
+  "done": true,
+  "done_reason": "stop",
+  "total_duration": 12086701500,
+  "load_duration": 64624500,
+  "prompt_eval_count": 692,
+  "prompt_eval_duration": 8893277800,
+  "eval_count": 25,
+  "eval_duration": 3090443200
+}
+---
+[2025-12-10 03:25:14]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new table called \"Totals\" with its columns set to the sum of the columns PIC, Dual, SEL_time, MEL_time, Tailwheel_time, Turbine_time  in table expanded"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+ERROR: Request timeout - model may be processing slowly
+---
+[2025-12-10 03:25:14]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new table called \"Totals\" with its columns set to the sum of the columns PIC, Dual, SEL_time, MEL_time, Tailwheel_time, Turbine_time  in table expanded"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+ERROR: Connection error (ECONNRESET): socket hang up
+---
+[2025-12-10 03:25:14]
+PROMPT:
+{
+  "model": "codellama",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a SQL expert. Convert natural language queries to SQLite SQL. \nTable name: expanded\nSchema: [{\"name\":\"Flight#\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Date\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Reg\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"From\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"To\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"PIC\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Landings\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Aprcs\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Comment\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Dual\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"ActI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SimI\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Sim\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Total\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Type:1\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Class\",\"type\":\"TEXT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine\",\"type\":\"INT\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"SEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"MEL_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Tailwheel_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0},{\"name\":\"Turbine_time\",\"type\":\"REAL\",\"notnull\":0,\"defaultValue\":null,\"pk\":0}]\nIMPORTANT: Return ONLY the raw SQL query. Do NOT use markdown code blocks (no backticks, no ```sql). \nReturn the SQL statement directly without any formatting, explanations, or code block markers."
+    },
+    {
+      "role": "user",
+      "content": "create a new table called \"Totals\" with its columns set to the sum of the columns PIC, Dual, SEL_time, MEL_time, Tailwheel_time, Turbine_time  in table expanded"
+    }
+  ],
+  "stream": false,
+  "options": {
+    "temperature": 0.3,
+    "num_predict": 200
+  }
+}
+ERROR: OLLAMA_TIMEOUT. Connection test: {"success":true,"statusCode":200,"body":"{\"models\":[{\"name\":\"codellama:latest\",\"model\":\"codellama:latest\",\"modified_at\":\"2025-12-07T11:32:49.6320445-08:00\",\"size\":3825910662,\"digest\":\"8fdf8f752f6e80de33e82f381aba784c025982752cd1ae9377add66449d2225f\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"llama\",\"families\":null,\"parameter_size\":\"7B\",\"quantization_level\":\"Q4_0\"}}]}"}
+---

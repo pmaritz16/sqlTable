@@ -53,8 +53,16 @@ class DatabaseManager {
     }
 
     const columns = schema.map(col => {
-      const type = col.type === 'number' ? 'REAL' : 'TEXT';
-      return `"${col.name}" ${type}`;
+      let sqlType;
+      if (col.type === 'number') {
+        sqlType = 'REAL';
+      } else if (col.type === 'boolean') {
+        // SQLite doesn't have native boolean, use INTEGER (0/1)
+        sqlType = 'INTEGER';
+      } else {
+        sqlType = 'TEXT';
+      }
+      return `"${col.name}" ${sqlType}`;
     }).join(', ');
 
     const createTableSQL = `CREATE TABLE "${tableName}" (${columns})`;
@@ -77,7 +85,14 @@ class DatabaseManager {
     for (const row of data) {
       const values = schema.map(col => {
         const value = row[col.name];
-        return value === null || value === undefined ? null : value;
+        if (value === null || value === undefined) {
+          return null;
+        }
+        // Convert boolean to integer for SQLite (0/1)
+        if (col.type === 'boolean') {
+          return value ? 1 : 0;
+        }
+        return value;
       });
       stmt.run(values);
     }
@@ -155,6 +170,67 @@ class DatabaseManager {
       throw new Error('Database not initialized');
     }
     this.db.run(`DROP TABLE IF EXISTS "${tableName}"`);
+  }
+
+  executeSQL(sql) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    try {
+      // Check if it's a SELECT query
+      const trimmedSQL = sql.trim().toUpperCase();
+      if (trimmedSQL.startsWith('SELECT')) {
+        const result = this.db.exec(sql);
+        if (result.length === 0) {
+          return { type: 'select', columns: [], rows: [], rowCount: 0 };
+        }
+        
+        const columns = result[0].columns;
+        const rows = result[0].values.map(row => {
+          const obj = {};
+          columns.forEach((col, index) => {
+            obj[col] = row[index];
+          });
+          return obj;
+        });
+        
+        return { type: 'select', columns, rows, rowCount: rows.length };
+      } else {
+        // For INSERT, UPDATE, DELETE, etc.
+        this.db.run(sql);
+        // Try to get affected rows count
+        const changes = this.db.exec("SELECT changes() as count");
+        const affectedRows = changes.length > 0 ? changes[0].values[0][0] : 0;
+        return { type: 'modify', affectedRows };
+      }
+    } catch (error) {
+      throw new Error(`SQL execution error: ${error.message}`);
+    }
+  }
+
+  getTableSchema(tableName) {
+    if (!this.db) {
+      return [];
+    }
+
+    try {
+      const result = this.db.exec(`PRAGMA table_info("${tableName}")`);
+      if (result.length === 0) {
+        return [];
+      }
+
+      return result[0].values.map(row => ({
+        name: row[1],
+        type: row[2],
+        notnull: row[3],
+        defaultValue: row[4],
+        pk: row[5]
+      }));
+    } catch (error) {
+      console.error('Error getting table schema:', error);
+      return [];
+    }
   }
 
   close() {

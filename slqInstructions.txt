@@ -1,0 +1,23 @@
+write a javascript program to run on windows to load CSV files into tables of sql database.
+the program should use a graphical user interface built using SVELTE.
+the program should use sql.js for its database.
+each file should go into a separate table.
+the paths to csv files should be obtained from an config file.
+the path to the database file should also be stored in the config file.
+the path to the config file should be obtained from the user at start-up.
+a default config file should be created for the use, with a default path for the database file.
+the use should be given the option of using the default config file.
+the CSV files specify the schema of the data in the first line of the CSV file, using the following convention, "column name:column type, column name:column type, ...".
+column type can be "string" or "number".
+if no column type is given, the the type of the column defaults to string.
+if columns are missing from a line in the CSV file then balnk values shoud be assumed.
+Once loaded, the program should the user to navigate between tables, displaying the contents to the user in a scrollable, tabluar layout.
+
+update the program to allow the user to enter commands in natural language,
+these commands should be translated into SQL by a LLM,
+and then stored in a log file, which is stored at a default location.
+The user should be able to view, in a separate view, the log file and edit its contents.
+The user should be able to toggle between the table view and the view of the log file.
+The user should be able to select an entry in the log file and have that command and subsequent ones executed against the current selected table.
+Any errors should be displayed in the log file view.
+
