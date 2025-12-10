@@ -1,3 +1,6 @@
-create a new table "expanded" by joining "flights" to "types" on field "Type" in both tables
+create a new table "expanded" by joining "flights" to "types" on the common field "Type" 
+[CREATE TABLE expanded AS SELECT * FROM flights JOIN types ON flights.Type = types.Type;]
 to table "expanded", add a new column called "Total"
+[ALTER TABLE expanded ADD COLUMN Total REAL;]
 in table "expanded", set the value of "Total" to PIC + Dual
+[UPDATE expanded SET Total = PIC + Dual;]

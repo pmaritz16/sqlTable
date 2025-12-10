@@ -345,7 +345,7 @@
       const commandsContent = await window.electronAPI.readCommandsFile();
       const newCommands = commandsContent.split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith('#')); // Filter empty lines and comments
+        .filter(line => line.length > 0 && !line.startsWith('#') && !line.startsWith('[')); // Filter empty lines, comments, and SQL lines
       
       // Don't reset the global index - preserve it across table switches and refreshes
       commands = newCommands;
@@ -405,32 +405,47 @@
       const naturalLanguage = nextCommand;
       console.log(`Processing command ${currentCommandIndex + 1}/${commands.length}: ${naturalLanguage}`);
 
-      // Translate to SQL
-      let sql;
+      // Check if SQL already exists for this command
+      let sql = null;
       try {
-        sql = await window.electronAPI.translateToSQL(naturalLanguage, currentTable, tableSchema);
-        if (!sql || sql.trim() === '') {
-          throw new Error('Empty SQL returned from translation');
+        const existingSql = await window.electronAPI.getSqlForCommand(naturalLanguage);
+        if (existingSql && existingSql.trim() !== '') {
+          sql = existingSql.trim();
+          console.log(`Using existing SQL for command: ${sql}`);
         }
-      } catch (translateError) {
-        const errorMsg = translateError.message;
-        console.error(`Error translating command ${currentCommandIndex + 1}:`, errorMsg);
-        
-        // Log the error
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-        await handleCommandResult({
-          detail: {
-            naturalLanguage,
-            sql: null,
-            error: errorMsg,
-            result: null,
-            timestamp
-          }
-        });
+      } catch (checkError) {
+        console.warn('Error checking for existing SQL:', checkError);
+        // Continue to translation if check fails
+      }
 
-        errorMessage = `Error translating command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${errorMsg}`;
-        executingCommand = false;
-        return; // Stop on error
+      // Translate to SQL only if not found in file
+      if (!sql) {
+        try {
+          sql = await window.electronAPI.translateToSQL(naturalLanguage, currentTable, tableSchema);
+          if (!sql || sql.trim() === '') {
+            throw new Error('Empty SQL returned from translation');
+          }
+          console.log(`Generated new SQL for command: ${sql}`);
+        } catch (translateError) {
+          const errorMsg = translateError.message;
+          console.error(`Error translating command ${currentCommandIndex + 1}:`, errorMsg);
+          
+          // Log the error
+          const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          await handleCommandResult({
+            detail: {
+              naturalLanguage,
+              sql: null,
+              error: errorMsg,
+              result: null,
+              timestamp
+            }
+          });
+
+          errorMessage = `Error translating command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${errorMsg}`;
+          executingCommand = false;
+          return; // Stop on error
+        }
       }
 
       // Execute SQL
@@ -477,6 +492,24 @@
           timestamp
         }
       });
+
+      // Insert SQL into commands.txt file after successful execution (only if it wasn't already there)
+      try {
+        const existingSql = await window.electronAPI.getSqlForCommand(naturalLanguage);
+        if (!existingSql || existingSql.trim() === '') {
+          // SQL doesn't exist yet, insert it
+          await window.electronAPI.insertSqlIntoCommandsFile(naturalLanguage, sql);
+          console.log(`SQL inserted into commands.txt after command: ${naturalLanguage}`);
+        } else {
+          console.log(`SQL already exists for command, skipping insertion`);
+        }
+        
+        // Reload commands to reflect any changes (SQL lines starting with [ will be filtered out)
+        await loadCommands();
+      } catch (insertError) {
+        console.error('Error inserting SQL into commands.txt:', insertError);
+        // Don't fail the execution if we can't insert the SQL
+      }
 
       // Move to next command - increment after successful execution
       currentCommandIndex = currentCommandIndex + 1;

@@ -27,7 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readLLMLogFile: () => ipcRenderer.invoke('read-llm-log-file'),
   saveFile: (options) => ipcRenderer.invoke('save-file', options),
   writeCsvFile: (filePath, content) => ipcRenderer.invoke('write-csv-file', filePath, content),
-  readCommandsFile: () => ipcRenderer.invoke('read-commands-file')
+  readCommandsFile: () => ipcRenderer.invoke('read-commands-file'),
+  insertSqlIntoCommandsFile: (commandText, sql) => ipcRenderer.invoke('insert-sql-into-commands-file', commandText, sql),
+  getSqlForCommand: (commandText) => ipcRenderer.invoke('get-sql-for-command', commandText)
 });
 
 console.log('Preload script loaded, electronAPI exposed');

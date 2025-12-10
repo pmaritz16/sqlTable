@@ -496,6 +496,85 @@ ipcMain.handle('read-commands-file', async (event) => {
   }
 });
 
+ipcMain.handle('get-sql-for-command', async (event, commandText) => {
+  try {
+    const commandsPath = join(__dirname, 'commands.txt');
+    if (!fs.existsSync(commandsPath)) {
+      return null; // File doesn't exist, no SQL available
+    }
+    
+    const content = fs.readFileSync(commandsPath, 'utf8');
+    const lines = content.split('\n');
+    
+    // Find the line that matches the command text (trimmed)
+    for (let i = 0; i < lines.length; i++) {
+      const trimmedLine = lines[i].trim();
+      // Match if the line (ignoring leading/trailing whitespace) matches the command
+      // and it's not already a SQL line (starts with [)
+      if (trimmedLine === commandText && !trimmedLine.startsWith('[')) {
+        // Check if the next line exists and is a SQL line (starts with [ and ends with ])
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1].trim();
+          if (nextLine.startsWith('[') && nextLine.endsWith(']')) {
+            // Extract SQL from between the brackets
+            const sql = nextLine.slice(1, -1); // Remove [ and ]
+            return sql;
+          }
+        }
+        // No SQL found for this command
+        return null;
+      }
+    }
+    
+    // Command not found
+    return null;
+  } catch (error) {
+    console.error('Error getting SQL for command:', error);
+    return null; // Return null on error, will trigger translation
+  }
+});
+
+ipcMain.handle('insert-sql-into-commands-file', async (event, commandText, sql) => {
+  try {
+    const commandsPath = join(__dirname, 'commands.txt');
+    if (!fs.existsSync(commandsPath)) {
+      throw new Error('commands.txt file not found in application directory');
+    }
+    
+    let content = fs.readFileSync(commandsPath, 'utf8');
+    const lines = content.split('\n');
+    
+    // Find the line that matches the command text (trimmed, ignoring empty lines and comments)
+    let foundIndex = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const trimmedLine = lines[i].trim();
+      // Match if the line (ignoring leading/trailing whitespace) matches the command
+      // Also skip if it's already a SQL line (starts with [)
+      if (trimmedLine === commandText && !trimmedLine.startsWith('[')) {
+        foundIndex = i;
+        break;
+      }
+    }
+    
+    if (foundIndex === -1) {
+      throw new Error(`Command text not found in commands.txt: "${commandText}"`);
+    }
+    
+    // Insert SQL on a new line after the command, wrapped in [ ]
+    const sqlLine = `[${sql}]`;
+    lines.splice(foundIndex + 1, 0, sqlLine);
+    
+    // Write back to file
+    content = lines.join('\n');
+    fs.writeFileSync(commandsPath, content, 'utf8');
+    
+    return true;
+  } catch (error) {
+    console.error('Error inserting SQL into commands file:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('test-ollama-connection', async (event) => {
   // Use environment variables or defaults
   const ollamaHost = process.env.OLLAMA_HOST || 'localhost';

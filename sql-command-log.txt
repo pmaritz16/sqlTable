@@ -1,16 +1,16 @@
-[2025-12-10 23:30:27]
-NL: create a new table "expanded" by joining "flights" to "types" on field "Type" in both tables
-SQL: CREATE TABLE expanded AS SELECT flights.*, types.Class FROM flights INNER JOIN types ON flights.Type = types.Type;
+[2025-12-10 23:52:20]
+NL: create a new table "expanded" by joining "flights" to "types" on the common field "Type"
+SQL: CREATE TABLE expanded AS SELECT * FROM flights JOIN types ON flights.Type = types.Type;
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-10 23:31:25]
+[2025-12-10 23:52:33]
 NL: to table "expanded", add a new column called "Total"
 SQL: ALTER TABLE expanded ADD COLUMN Total REAL;
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-10 23:31:52]
+[2025-12-10 23:52:43]
 NL: in table "expanded", set the value of "Total" to PIC + Dual
 SQL: UPDATE expanded SET Total = PIC + Dual;
 RESULT: Affected 1891 row(s)
