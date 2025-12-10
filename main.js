@@ -362,6 +362,33 @@ ipcMain.handle('select-file', async (event, options) => {
   return result.filePaths[0];
 });
 
+ipcMain.handle('save-file', async (event, options) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: options.title || 'Save File',
+    defaultPath: options.defaultPath,
+    filters: options.filters || [{ name: 'All Files', extensions: ['*'] }]
+  });
+  
+  if (result.canceled) {
+    return null;
+  }
+  return result.filePath;
+});
+
+ipcMain.handle('write-csv-file', async (event, filePath, content) => {
+  try {
+    const fileDir = dirname(filePath);
+    if (!fs.existsSync(fileDir)) {
+      fs.mkdirSync(fileDir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, content, 'utf8');
+    return true;
+  } catch (error) {
+    console.error('Error writing CSV file:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('read-csv-file', async (event, filePath) => {
   try {
     const content = fs.readFileSync(filePath, 'utf8');
@@ -451,6 +478,20 @@ ipcMain.handle('read-llm-log-file', async (event) => {
     return content;
   } catch (error) {
     console.error('Error reading LLM log file:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('read-commands-file', async (event) => {
+  try {
+    const commandsPath = join(__dirname, 'commands.txt');
+    if (!fs.existsSync(commandsPath)) {
+      throw new Error('commands.txt file not found in application directory');
+    }
+    const content = fs.readFileSync(commandsPath, 'utf8');
+    return content;
+  } catch (error) {
+    console.error('Error reading commands file:', error);
     throw error;
   }
 });

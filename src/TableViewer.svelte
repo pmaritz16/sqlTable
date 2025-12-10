@@ -1,11 +1,13 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import TableDisplay from './TableDisplay.svelte';
+  import { CSVExporter } from './csvExporter.js';
 
   export let tables = [];
   export let currentTable = null;
   export let dbManager = null;
   export let tableToCsvMap = {};
+  export let electronAPI = null;
 
   const dispatch = createEventDispatcher();
   let tableData = { columns: [], rows: [] };
@@ -13,9 +15,15 @@
   let currentPage = 0;
   let pageSize = 100;
   let loading = false;
+  let exporting = false;
 
   $: if (currentTable && dbManager) {
     loadTableData();
+  }
+
+  // Debug: log when currentTable changes
+  $: if (currentTable) {
+    console.log('Current table set:', currentTable, 'electronAPI available:', !!electronAPI);
   }
 
   async function loadTableData() {
@@ -64,6 +72,52 @@
   $: maxPage = Math.ceil(rowCount / pageSize) - 1;
   $: canGoPrevious = currentPage > 0;
   $: canGoNext = currentPage < maxPage;
+
+  async function handleExport() {
+    if (!currentTable || !dbManager || !electronAPI || exporting) return;
+
+    exporting = true;
+    try {
+      // Get table schema
+      const schema = dbManager.getTableSchema(currentTable);
+      if (!schema || schema.length === 0) {
+        alert('Unable to get table schema');
+        return;
+      }
+
+      // Get all table data (not just current page)
+      const allData = dbManager.getAllTableData(currentTable);
+      if (!allData || allData.rows.length === 0) {
+        alert('Table is empty, nothing to export');
+        return;
+      }
+
+      // Convert to CSV format
+      const csvContent = CSVExporter.exportTableToCSV(currentTable, schema, allData);
+
+      // Show save dialog
+      const filePath = await electronAPI.saveFile({
+        title: 'Export Table to CSV',
+        defaultPath: `${currentTable}.csv`,
+        filters: [{ name: 'CSV Files', extensions: ['csv'] }]
+      });
+
+      if (!filePath) {
+        // User cancelled
+        return;
+      }
+
+      // Write CSV file
+      await electronAPI.writeCsvFile(filePath, csvContent);
+      
+      alert(`Table "${currentTable}" exported successfully to ${filePath}`);
+    } catch (error) {
+      console.error('Error exporting table:', error);
+      alert(`Error exporting table: ${error.message}`);
+    } finally {
+      exporting = false;
+    }
+  }
 </script>
 
 <div class="table-viewer">
@@ -85,6 +139,16 @@
       </select>
     </div>
     <div class="header-right">
+      {#if currentTable && electronAPI}
+        <button 
+          class="export-button" 
+          on:click={handleExport} 
+          title="Export table to CSV"
+          disabled={exporting || loading || !electronAPI}
+        >
+          {exporting ? 'Exporting...' : 'Export CSV'}
+        </button>
+      {/if}
       <button class="refresh-button" on:click={handleRefresh} title="Refresh">
         ↻
       </button>
@@ -198,6 +262,29 @@
   }
 
   .refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .export-button {
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+
+  .export-button:hover:not(:disabled) {
+    background: #059669;
+  }
+
+  .export-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

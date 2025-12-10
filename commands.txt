@@ -1,0 +1,3 @@
+create a new table "expanded" by joining "flights" to "types" on field "Type" in both tables
+to table "expanded", add a new column called "Total"
+in table "expanded", set the value of "Total" to PIC + Dual

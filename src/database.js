@@ -143,6 +143,30 @@ class DatabaseManager {
     return { columns, rows };
   }
 
+  getAllTableData(tableName) {
+    if (!this.db) {
+      return { columns: [], rows: [] };
+    }
+
+    // Get all data without limit
+    const result = this.db.exec(`SELECT * FROM "${tableName}"`);
+    
+    if (result.length === 0) {
+      return { columns: [], rows: [] };
+    }
+
+    const columns = result[0].columns;
+    const rows = result[0].values.map(row => {
+      const obj = {};
+      columns.forEach((col, index) => {
+        obj[col] = row[index];
+      });
+      return obj;
+    });
+
+    return { columns, rows };
+  }
+
   getTableRowCount(tableName) {
     if (!this.db) {
       return 0;

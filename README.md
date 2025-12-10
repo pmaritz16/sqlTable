@@ -14,6 +14,7 @@ A Windows desktop application built with Svelte and Electron that loads CSV file
 - **Command Logging**: All commands are logged with timestamps, SQL translations, results, and errors
 - **Log File Viewer**: View, edit, and re-execute logged commands
 - **Local LLM Integration**: Uses Ollama for local, private SQL translation
+- **CSV Export**: Export any table to CSV format with the same schema convention used for import
 
 ## CSV File Format
 
@@ -98,6 +99,12 @@ npm run electron
 5. **Navigate Tables**: Use the table selector dropdown to switch between different tables and view their contents
 
 6. **Pagination**: Use the Previous/Next buttons to navigate through large tables (100 rows per page)
+
+7. **Export to CSV**: 
+   - Click the "Export CSV" button in the table viewer header
+   - Choose a location to save the CSV file
+   - The exported file will use the same schema convention (first line with column:type format)
+   - All table data will be exported, not just the current page
 
 7. **Natural Language Commands**: 
    - Select a table from the dropdown

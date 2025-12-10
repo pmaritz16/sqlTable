@@ -24,7 +24,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeLogFile: (path, content) => ipcRenderer.invoke('write-log-file', path, content),
   translateToSQL: (naturalLanguage, tableName, tableSchema) => ipcRenderer.invoke('translate-to-sql', naturalLanguage, tableName, tableSchema),
   testOllamaConnection: () => ipcRenderer.invoke('test-ollama-connection'),
-  readLLMLogFile: () => ipcRenderer.invoke('read-llm-log-file')
+  readLLMLogFile: () => ipcRenderer.invoke('read-llm-log-file'),
+  saveFile: (options) => ipcRenderer.invoke('save-file', options),
+  writeCsvFile: (filePath, content) => ipcRenderer.invoke('write-csv-file', filePath, content),
+  readCommandsFile: () => ipcRenderer.invoke('read-commands-file')
 });
 
 console.log('Preload script loaded, electronAPI exposed');

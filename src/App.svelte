@@ -8,7 +8,6 @@
   import LoadingIndicator from './LoadingIndicator.svelte';
   import ConfigPreview from './ConfigPreview.svelte';
   import TableManager from './TableManager.svelte';
-  import CommandInput from './CommandInput.svelte';
   import LogViewer from './LogViewer.svelte';
 
   let configManager;
@@ -327,6 +326,169 @@
     });
   }
 
+  let commands = [];
+  let currentCommandIndex = 0; // Global command index, not per table
+  let executingCommand = false;
+  let commandsError = null;
+  let commandsLoaded = false;
+
+  // Load commands when table is selected or viewer is shown
+  async function loadCommands() {
+    if (!window.electronAPI) {
+      commands = [];
+      commandsError = 'Electron API not available';
+      commandsLoaded = false;
+      return;
+    }
+
+    try {
+      const commandsContent = await window.electronAPI.readCommandsFile();
+      const newCommands = commandsContent.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && !line.startsWith('#')); // Filter empty lines and comments
+      
+      // Don't reset the global index - preserve it across table switches and refreshes
+      commands = newCommands;
+      commandsError = null;
+      commandsLoaded = true;
+      
+      // Ensure index doesn't exceed command count
+      if (currentCommandIndex >= commands.length) {
+        currentCommandIndex = commands.length; // Will show "all completed"
+      }
+      
+      if (commands.length === 0) {
+        commandsError = 'No commands found in commands.txt (empty file or only comments)';
+      }
+    } catch (error) {
+      console.error('Error loading commands:', error);
+      commands = [];
+      commandsError = `Error reading commands.txt: ${error.message}`;
+      commandsLoaded = false;
+      // Don't reset index on error - keep current position
+    }
+  }
+
+  // Get the next command to execute
+  $: nextCommand = currentCommandIndex < commands.length ? commands[currentCommandIndex] : null;
+  $: hasMoreCommands = currentCommandIndex < commands.length;
+  $: commandProgress = commands.length > 0 ? `${currentCommandIndex + 1} / ${commands.length}` : '0 / 0';
+
+  // Load commands when viewer is shown and table is selected
+  $: if (currentView === 'viewer' && currentTable && window.electronAPI && !commandsLoaded) {
+    loadCommands();
+  }
+
+  async function handleExecuteNextCommand() {
+    if (!window.electronAPI || !dbManager || !currentTable) {
+      errorMessage = 'Electron API, database, or table not available';
+      return;
+    }
+
+    if (executingCommand || !nextCommand) {
+      return;
+    }
+
+    executingCommand = true;
+    errorMessage = '';
+    commandsError = null;
+
+    try {
+      // Get current table schema
+      let tableSchema = dbManager.getTableSchema(currentTable);
+      if (!tableSchema || tableSchema.length === 0) {
+        errorMessage = 'Unable to get table schema';
+        executingCommand = false;
+        return;
+      }
+
+      const naturalLanguage = nextCommand;
+      console.log(`Processing command ${currentCommandIndex + 1}/${commands.length}: ${naturalLanguage}`);
+
+      // Translate to SQL
+      let sql;
+      try {
+        sql = await window.electronAPI.translateToSQL(naturalLanguage, currentTable, tableSchema);
+        if (!sql || sql.trim() === '') {
+          throw new Error('Empty SQL returned from translation');
+        }
+      } catch (translateError) {
+        const errorMsg = translateError.message;
+        console.error(`Error translating command ${currentCommandIndex + 1}:`, errorMsg);
+        
+        // Log the error
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        await handleCommandResult({
+          detail: {
+            naturalLanguage,
+            sql: null,
+            error: errorMsg,
+            result: null,
+            timestamp
+          }
+        });
+
+        errorMessage = `Error translating command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${errorMsg}`;
+        executingCommand = false;
+        return; // Stop on error
+      }
+
+      // Execute SQL
+      let result = null;
+      let error = null;
+      try {
+        result = dbManager.executeSQL(sql);
+        // Save database if modified
+        if (config && result.type === 'modify') {
+          await dbManager.saveToFile(config.databasePath, window.electronAPI);
+          // Refresh table data and schema
+          handleRefresh();
+          updateTableSchema();
+        }
+      } catch (execError) {
+        error = execError.message || 'SQL execution failed';
+        console.error(`Error executing command ${currentCommandIndex + 1}:`, error);
+
+        // Log the error
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        await handleCommandResult({
+          detail: {
+            naturalLanguage,
+            sql,
+            error,
+            result: null,
+            timestamp
+          }
+        });
+
+        errorMessage = `Error executing command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${error}`;
+        executingCommand = false;
+        return; // Stop on error
+      }
+
+      // Log successful execution
+      const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+      await handleCommandResult({
+        detail: {
+          naturalLanguage,
+          sql,
+          error: null,
+          result: result ? (result.type === 'select' ? `Returned ${result.rowCount} row(s)` : `Affected ${result.affectedRows} row(s)`) : null,
+          timestamp
+        }
+      });
+
+      // Move to next command - increment after successful execution
+      currentCommandIndex = currentCommandIndex + 1;
+      console.log(`Command ${currentCommandIndex}/${commands.length} completed, moving to next`);
+    } catch (error) {
+      console.error('Error executing command:', error);
+      errorMessage = `Error executing command: ${error.message}`;
+    } finally {
+      executingCommand = false;
+    }
+  }
+
   $: if (currentTable && dbManager) {
     updateTableSchema();
   }
@@ -386,17 +548,42 @@
         <button class="toggle-button active">Table View</button>
         <button class="toggle-button" on:click={toggleView}>Log View</button>
       </div>
-      <CommandInput
-        {currentTable}
-        tableSchema={currentTableSchema}
-        electronAPI={window.electronAPI}
-        on:executeSQL={handleExecuteSQL}
-      />
+      {#if currentTable && window.electronAPI}
+        <div class="commands-panel">
+          {#if commandsError}
+            <div class="commands-error">
+              {commandsError}
+            </div>
+          {:else if hasMoreCommands}
+            <div class="next-command-display">
+              <div class="command-label">Next Command ({commandProgress}):</div>
+              <div class="command-text">{nextCommand}</div>
+              <button 
+                class="execute-next-button" 
+                on:click={handleExecuteNextCommand}
+                disabled={executingCommand}
+                title="Execute this command"
+              >
+                {executingCommand ? 'Executing...' : 'Execute Next Command'}
+              </button>
+            </div>
+          {:else if commands.length === 0}
+            <div class="commands-info">
+              No commands loaded. Create a commands.txt file in the application directory.
+            </div>
+          {:else}
+            <div class="commands-complete">
+              All commands completed ({commands.length} total)
+            </div>
+          {/if}
+        </div>
+      {/if}
       <TableViewer
         {tables}
         {currentTable}
         {dbManager}
         tableToCsvMap={tableToCsvMap}
+        electronAPI={window.electronAPI}
         on:tableSelect={handleTableSelect}
         on:refresh={handleRefresh}
       />
@@ -409,9 +596,6 @@
       </div>
       <LogViewer
         {logManager}
-        {dbManager}
-        {currentTable}
-        electronAPI={window.electronAPI}
         on:refresh={handleRefresh}
       />
     </div>
@@ -561,6 +745,85 @@
     color: #667eea;
     border-bottom-color: #667eea;
     background: #f0f4ff;
+  }
+
+  .commands-panel {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 16px 24px;
+  }
+
+  .commands-error {
+    color: #dc2626;
+    font-size: 14px;
+    padding: 8px;
+    background: #fef2f2;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+  }
+
+  .commands-info {
+    color: #666;
+    font-size: 14px;
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 6px;
+  }
+
+  .commands-complete {
+    color: #059669;
+    font-size: 14px;
+    padding: 8px;
+    background: #d1fae5;
+    border-radius: 6px;
+    border: 1px solid #a7f3d0;
+    font-weight: 600;
+  }
+
+  .next-command-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .command-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .command-text {
+    font-size: 16px;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    color: #111827;
+    font-family: 'Courier New', monospace;
+    word-break: break-word;
+  }
+
+  .execute-next-button {
+    align-self: flex-start;
+    padding: 10px 20px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .execute-next-button:hover:not(:disabled) {
+    background: #059669;
+  }
+
+  .execute-next-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #6b7280;
   }
 </style>
 

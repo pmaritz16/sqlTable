@@ -1,65 +1,17 @@
-[2025-12-10 01:22:28]
-NL: add a new column called "Total" and set the value of its fields to be the sum of "PIC" and "Dual"
-SQL: ALTER TABLE flights ADD COLUMN Total REAL; UPDATE flights SET Total = PIC + Dual;
-RESULT: Affected 1891 row(s)
+[2025-12-10 23:30:27]
+NL: create a new table "expanded" by joining "flights" to "types" on field "Type" in both tables
+SQL: CREATE TABLE expanded AS SELECT flights.*, types.Class FROM flights INNER JOIN types ON flights.Type = types.Type;
+RESULT: Affected 0 row(s)
 ---
 
-[2025-12-10 02:59:51]
-NL: join table "flights" to table "types" on column "Type" and store the results in a new table called "expanded"
-SQL: CREATE TABLE expanded AS SELECT * FROM flights INNER JOIN types ON flights.Type = types.type;
-RESULT: Affected 1891 row(s)
+[2025-12-10 23:31:25]
+NL: to table "expanded", add a new column called "Total"
+SQL: ALTER TABLE expanded ADD COLUMN Total REAL;
+RESULT: Affected 0 row(s)
 ---
 
-[2025-12-10 03:08:28]
-NL: create a new column called "SEL_time"
-SQL: ALTER TABLE expanded ADD COLUMN SEL_time REAL;
+[2025-12-10 23:31:52]
+NL: in table "expanded", set the value of "Total" to PIC + Dual
+SQL: UPDATE expanded SET Total = PIC + Dual;
 RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:10:07]
-NL: set the value of SEL_time to be equal to Total if the field Class is equal to "SEL" else set it 0
-SQL: UPDATE expanded SET SEL_time = (CASE WHEN Class = 'SEL' THEN Total ELSE 0 END);
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:11:25]
-NL: add a column called MEL_time
-SQL: ALTER TABLE expanded ADD COLUMN MEL_time REAL;
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:12:45]
-NL: set the value of MEL_time to be equal to Total if the field Class is equal to "MEL" else set it 0
-SQL: UPDATE expanded SET MEL_time = IF(Class = 'MEL', Total, 0);
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:14:07]
-NL: create a new column called "Tailwheel_time"
-SQL: ALTER TABLE expanded ADD COLUMN Tailwheel_time REAL;
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:16:18]
-NL: set the value of Tailwheel_time to equal to Total if the field Tailwheel is > 0 else set it to 0
-SQL: UPDATE expanded SET Tailwheel_time = (CASE WHEN Tailwheel > 0 THEN Total ELSE 0 END);
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:17:24]
-NL: create a new column called "Turbine_time"
-SQL: ALTER TABLE expanded ADD COLUMN Turbine_time REAL;
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:18:25]
-NL: set the value of Turbine_time to equal to Total if the field Turbine is > 0 else set it to 0
-SQL: UPDATE expanded SET Turbine_time = (CASE WHEN Turbine > 0 THEN Total ELSE 0 END);
-RESULT: Affected 1891 row(s)
----
-
-[2025-12-10 03:25:14]
-NL: create a new table called "Totals" with its columns set to the sum of the columns PIC, Dual, SEL_time, MEL_time, Tailwheel_time, Turbine_time  in table expanded
-SQL: SELECT * FROM "expanded"
-RESULT: Returned 1891 row(s)
 ---
