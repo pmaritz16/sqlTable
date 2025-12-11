@@ -21,6 +21,33 @@ console.log('='.repeat(50));
 
 let mainWindow;
 
+// Helper function to clear log files on startup
+function clearLogFiles() {
+  try {
+    const sqlLogPath = join(__dirname, 'sql-command-log.txt');
+    const llmLogPath = join(__dirname, 'llm-prompt-log.txt');
+    
+    // Clear SQL log file
+    if (fs.existsSync(sqlLogPath)) {
+      fs.writeFileSync(sqlLogPath, '', 'utf8');
+      console.log('✓ Cleared SQL command log file');
+    } else {
+      console.log('SQL command log file does not exist, skipping');
+    }
+    
+    // Clear LLM log file
+    if (fs.existsSync(llmLogPath)) {
+      fs.writeFileSync(llmLogPath, '', 'utf8');
+      console.log('✓ Cleared LLM prompt log file');
+    } else {
+      console.log('LLM prompt log file does not exist, skipping');
+    }
+  } catch (error) {
+    console.error('Error clearing log files:', error);
+    // Don't throw - log clearing failure shouldn't prevent app startup
+  }
+}
+
 // Helper function to test Ollama connection (defined early for startup use)
 async function testOllamaConnection(host, port) {
   return new Promise((resolve) => {
@@ -72,6 +99,10 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  // Clear log files on startup
+  console.log('Clearing log files on startup...');
+  clearLogFiles();
+  
   createWindow();
 
   // Get Ollama configuration from environment variables or use defaults
@@ -79,8 +110,15 @@ app.whenReady().then(async () => {
   const ollamaPort = process.env.OLLAMA_PORT || '11434';
   const ollamaModel = process.env.OLLAMA_MODEL || 'codellama';
   
+  // Display model information prominently
+  console.log('');
+  console.log('LLM Configuration:');
+  console.log(`  Model: ${ollamaModel}`);
+  console.log(`  Host: ${ollamaHost}`);
+  console.log(`  Port: ${ollamaPort}`);
+  console.log('');
+  
   console.log('Testing Ollama connection at startup...');
-  console.log(`Using configuration: ${ollamaHost}:${ollamaPort}, model: ${ollamaModel}`);
   
   let llmStatus = { connected: false, message: 'Testing connection...', host: ollamaHost, port: ollamaPort, model: ollamaModel };
   

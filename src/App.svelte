@@ -150,6 +150,14 @@
       }
       currentView = 'viewer';
       loadingMessage = '';
+      
+      // Automatically start executing commands even if no CSV files to load
+      if (tables.length > 0) {
+        console.log('No CSV files to load, starting automatic command execution...');
+        setTimeout(async () => {
+          await executeAllCommands();
+        }, 200);
+      }
       return;
     }
 
@@ -234,6 +242,16 @@
     
     currentView = 'viewer';
     loadingMessage = '';
+    
+    // Automatically start executing commands after CSV files are loaded
+    // Only if there were no errors during CSV loading
+    if (!errorMessage && tables.length > 0) {
+      console.log('CSV files loaded successfully, starting automatic command execution...');
+      // Wait a moment for the viewer to be ready, then start executing commands
+      setTimeout(async () => {
+        await executeAllCommands();
+      }, 200);
+    }
   }
 
   function handleCancelConfig() {
@@ -382,11 +400,11 @@
   async function handleExecuteNextCommand() {
     if (!window.electronAPI || !dbManager || !currentTable) {
       errorMessage = 'Electron API, database, or table not available';
-      return;
+      return false; // Return false to indicate failure/stop
     }
 
     if (executingCommand || !nextCommand) {
-      return;
+      return false; // Return false if no command to execute
     }
 
     executingCommand = true;
@@ -399,7 +417,7 @@
       if (!tableSchema || tableSchema.length === 0) {
         errorMessage = 'Unable to get table schema';
         executingCommand = false;
-        return;
+        return false; // Stop on error
       }
 
       const naturalLanguage = nextCommand;
@@ -444,7 +462,7 @@
 
           errorMessage = `Error translating command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${errorMsg}`;
           executingCommand = false;
-          return; // Stop on error
+          return false; // Stop on error
         }
       }
 
@@ -478,7 +496,7 @@
 
         errorMessage = `Error executing command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${error}`;
         executingCommand = false;
-        return; // Stop on error
+        return false; // Stop on error
       }
 
       // Log successful execution
@@ -514,11 +532,67 @@
       // Move to next command - increment after successful execution
       currentCommandIndex = currentCommandIndex + 1;
       console.log(`Command ${currentCommandIndex}/${commands.length} completed, moving to next`);
+      return true; // Return true to indicate success and continue
     } catch (error) {
       console.error('Error executing command:', error);
       errorMessage = `Error executing command: ${error.message}`;
+      return false; // Stop on error
     } finally {
       executingCommand = false;
+    }
+  }
+
+  // Automatically execute all commands until an error occurs or no more commands
+  async function executeAllCommands() {
+    if (!window.electronAPI || !dbManager || !currentTable) {
+      console.log('Cannot execute commands: prerequisites not met');
+      return;
+    }
+
+    // Wait for commands to be loaded
+    if (!commandsLoaded) {
+      console.log('Waiting for commands to load...');
+      await loadCommands();
+    }
+
+    // Wait a bit for reactive statements to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    if (commands.length === 0) {
+      console.log('No commands to execute');
+      return;
+    }
+
+    console.log(`Starting automatic execution of ${commands.length} command(s)...`);
+    loadingMessage = `Executing commands... (${currentCommandIndex + 1}/${commands.length})`;
+
+    // Execute commands one by one until error or completion
+    while (currentCommandIndex < commands.length && !errorMessage) {
+      const success = await handleExecuteNextCommand();
+      
+      if (!success) {
+        // Error occurred or no more commands
+        console.log('Command execution stopped');
+        break;
+      }
+
+      // Update loading message
+      if (currentCommandIndex < commands.length) {
+        loadingMessage = `Executing commands... (${currentCommandIndex + 1}/${commands.length})`;
+      } else {
+        loadingMessage = `All commands completed (${commands.length}/${commands.length})`;
+      }
+
+      // Small delay between commands to allow UI updates
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    loadingMessage = '';
+    
+    if (currentCommandIndex >= commands.length) {
+      console.log('All commands executed successfully');
+    } else if (errorMessage) {
+      console.log(`Command execution stopped due to error: ${errorMessage}`);
     }
   }
 

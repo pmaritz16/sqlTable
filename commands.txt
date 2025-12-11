@@ -1,6 +1,49 @@
+in table "flights", delete all rows where the Date is earlier than Jan 1st, 2025
+[DELETE FROM flights WHERE Date < '2025-01-01']
 create a new table "expanded" by joining "flights" to "types" on the common field "Type" 
-[CREATE TABLE expanded AS SELECT * FROM flights JOIN types ON flights.Type = types.Type;]
+[CREATE TABLE expanded AS SELECT * FROM flights INNER JOIN types ON flights.Type = types.Type;]
 to table "expanded", add a new column called "Total"
 [ALTER TABLE expanded ADD COLUMN Total REAL;]
 in table "expanded", set the value of "Total" to PIC + Dual
-[UPDATE expanded SET Total = PIC + Dual;]
+[UPDATE expanded SET Total = PIC + Dual]
+in table "expanded", add a column called "SEL_time" of type REAL
+[ALTER TABLE expanded ADD COLUMN SEL_time REAL]
+in table "expanded" set "SEL_time" value to that of "Total" if field "Class" = "SEL" and if not, then 0
+[UPDATE expanded SET SEL_time = CASE WHEN Class = 'SEL' THEN Total ELSE 0 END]
+in table "expanded", add a column called "MEL_time" of type REAL
+[ALTER TABLE expanded ADD COLUMN MEL_time REAL]
+in table "expanded" set "MEL_time" value to that of "Total" if field "Class" = "MEL" and if not, then 0
+[UPDATE expanded SET MEL_time = CASE WHEN Class = 'MEL' THEN Total ELSE 0 END]
+in table "expanded", add a column called "Tailwheel_time" of type REAL
+[ALTER TABLE expanded ADD COLUMN Tailwheel_time REAL]
+in table "expanded" set "Tailwheel_time" value to that of "Total" if field "Tailwheel" > 0 and if not, then 0
+[UPDATE expanded SET Tailwheel_time = CASE WHEN Tailwheel > 0 THEN Total ELSE 0 END]
+in table "expanded", add a column called "Turbine_time" of type REAL
+[ALTER TABLE expanded ADD COLUMN Turbine_time REAL]
+in table "expanded" set "Turbine_time" value to that of "Total" if field "Turbine" > 0 and if not, then 0
+[UPDATE expanded SET Turbine_time = CASE WHEN Turbine > 0 THEN Total ELSE 0 END]
+create a new table "TOTALS" with columns, of type REAL, "Total", "PIC", "Dual", "SEL", "MEL", "Tailwheel", "Turbine"
+[CREATE TABLE TOTALS (Total REAL, PIC REAL, Dual REAL, SEL REAL, MEL REAL, Tailwheel REAL, Turbine REAL);]
+in the table TOTALS, create a first row, and set the value of Total in that row to be the sum of the column Total from the table expanded
+[INSERT INTO TOTALS (Total) SELECT SUM(Total) FROM expanded]
+in the table TOTALS, set the value of PIC to be the sum of the column PIC in table expanded
+[UPDATE TOTALS SET PIC = (SELECT SUM(PIC) FROM expanded)]
+in the table TOTALS, set the value of Dual to be the sum of the column Dual in table expanded
+[UPDATE TOTALS SET Dual = (SELECT SUM(Dual) FROM expanded)]
+in the table TOTALS, set the value of SEL to be the sum of the column SEL_time in table expanded
+[UPDATE TOTALS SET SEL = (SELECT SUM(SEL_time) FROM expanded)]
+in the table TOTALS, set the value of MEL to be the sum of the column MEL_time in table expanded
+[UPDATE TOTALS SET MEL = (SELECT SUM(MEL_time) FROM expanded)]
+in the table TOTALS, set the value of Tailwheel to be the sum of the column Tailwheel_time in table expanded
+[UPDATE TOTALS SET Tailwheel = (SELECT SUM(Tailwheel_time) FROM expanded)]
+in the table TOTALS, set the value of Turbine to be the sum of the column Turbine_time in table expanded
+[UPDATE TOTALS SET Turbine = (SELECT SUM(Turbine_time) FROM expanded)]
+
+
+
+
+
+
+
+
+
