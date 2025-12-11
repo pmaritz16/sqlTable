@@ -4,6 +4,7 @@
   import DatabaseManager from './database.js';
   import LogManager from './logManager.js';
   import { CSVParser } from './csvParser.js';
+  import { CSVExporter } from './csvExporter.js';
   import TableViewer from './TableViewer.svelte';
   import LoadingIndicator from './LoadingIndicator.svelte';
   import ConfigPreview from './ConfigPreview.svelte';
@@ -90,8 +91,7 @@
 
   async function loadDefaultConfig() {
     try {
-      // First load the database to check for existing tables
-      loadingMessage = 'Loading database...';
+      loadingMessage = 'Initializing...';
       configPath = configManager.getDefaultConfigPath();
       config = await configManager.loadConfig(configPath);
       
@@ -106,15 +106,23 @@
         return;
       }
 
-      // Load database to check for existing tables
-      await dbManager.loadFromFile(config.databasePath, window.electronAPI);
+      // Delete existing database file if it exists and create a fresh database
+      loadingMessage = 'Creating fresh database...';
+      try {
+        await window.electronAPI.deleteDatabase(config.databasePath);
+        console.log('Previous database deleted (if it existed)');
+      } catch (deleteError) {
+        console.warn('Error deleting database (may not exist):', deleteError);
+        // Continue anyway - if file doesn't exist, that's fine
+      }
       
-      // Get existing tables
-      tables = dbManager.getTableNames();
+      // Create a fresh database
+      dbManager.createNew();
+      console.log('Fresh database created');
       
-      // Show table manager to allow deletion before loading new files
-      currentView = 'tableManager';
-      loadingMessage = '';
+      // Automatically proceed to load CSV files
+      currentView = 'loading';
+      await loadCSVFiles();
     } catch (error) {
       errorMessage = `Error loading config: ${error.message}`;
       console.error(error);
@@ -161,31 +169,18 @@
       return;
     }
 
-    loadingMessage = 'Checking CSV files...';
-    
-    // Get existing tables
-    const existingTables = new Set(dbManager.getTableNames());
+    loadingMessage = 'Loading CSV files...';
     
     // Clear the mapping for fresh load
     tableToCsvMap = {};
 
     let filesLoaded = 0;
-    let filesSkipped = 0;
 
     for (let i = 0; i < config.csvFiles.length; i++) {
       const csvPath = config.csvFiles[i];
       
       // Get table name from file path
       const tableName = CSVParser.getTableNameFromPath(csvPath);
-      
-      // Check if table already exists
-      if (existingTables.has(tableName)) {
-        console.log(`Table ${tableName} already exists, skipping CSV file ${csvPath}`);
-        filesSkipped++;
-        // Still add to mapping for display purposes
-        tableToCsvMap[tableName] = csvPath;
-        continue;
-      }
       
       loadingMessage = `Loading ${csvPath}... (${i + 1}/${config.csvFiles.length})`;
       
@@ -206,7 +201,6 @@
         dbManager.insertData(tableName, schema, data);
         
         filesLoaded++;
-        existingTables.add(tableName); // Add to set so we don't try to load it again
         
       } catch (error) {
         console.error(`Error loading CSV file ${csvPath}:`, error);
@@ -226,18 +220,6 @@
     if (tables.length > 0) {
       currentTable = tables[0];
       updateTableSchema();
-    }
-    
-    // Show summary message if files were skipped
-    if (filesSkipped > 0) {
-      const summaryMsg = `Loaded ${filesLoaded} file(s), skipped ${filesSkipped} file(s) (tables already exist)`;
-      console.log(summaryMsg);
-      if (!errorMessage) {
-        // Show info message briefly
-        setTimeout(() => {
-          // Info will be shown in console, not as error
-        }, 100);
-      }
     }
     
     currentView = 'viewer';
@@ -363,7 +345,7 @@
       const commandsContent = await window.electronAPI.readCommandsFile();
       const newCommands = commandsContent.split('\n')
         .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith('#') && !line.startsWith('[')); // Filter empty lines, comments, and SQL lines
+        .filter(line => line.length > 0 && !line.startsWith('#') && !line.startsWith('[') && !line.startsWith('!REM')); // Filter empty lines, comments, SQL lines, and !REM lines (but keep !SAVE for special handling)
       
       // Don't reset the global index - preserve it across table switches and refreshes
       commands = newCommands;
@@ -422,6 +404,82 @@
 
       const naturalLanguage = nextCommand;
       console.log(`Processing command ${currentCommandIndex + 1}/${commands.length}: ${naturalLanguage}`);
+
+      // Handle !SAVE commands directly (save table to CSV file)
+      if (naturalLanguage.startsWith('!SAVE')) {
+        try {
+          // Parse !SAVE command: !SAVE tableName filePath
+          const parts = naturalLanguage.split(/\s+/);
+          if (parts.length < 3) {
+            throw new Error('!SAVE command requires format: !SAVE <tableName> <filePath>');
+          }
+          
+          const saveTableName = parts[1];
+          const saveFilePath = parts.slice(2).join(' '); // Allow file paths with spaces
+          
+          // Check if table exists
+          const allTables = dbManager.getTableNames();
+          if (!allTables.includes(saveTableName)) {
+            throw new Error(`Table "${saveTableName}" does not exist`);
+          }
+          
+          // Get table schema
+          const saveTableSchema = dbManager.getTableSchema(saveTableName);
+          if (!saveTableSchema || saveTableSchema.length === 0) {
+            throw new Error(`Unable to get schema for table "${saveTableName}"`);
+          }
+          
+          // Get all table data
+          const allTableData = dbManager.getAllTableData(saveTableName);
+          
+          // Export to CSV
+          const csvContent = CSVExporter.exportTableToCSV(saveTableName, saveTableSchema, allTableData);
+          
+          // Write CSV file
+          await window.electronAPI.writeCsvFile(saveFilePath, csvContent);
+          
+          const rowCount = allTableData?.rows?.length || 0;
+          const resultMsg = `Exported table "${saveTableName}" (${rowCount} row(s)) to ${saveFilePath}`;
+          console.log(resultMsg);
+          
+          // Log the save operation
+          const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          await handleCommandResult({
+            detail: {
+              naturalLanguage,
+              sql: null,
+              error: null,
+              result: resultMsg,
+              timestamp
+            }
+          });
+          
+          // Move to next command
+          currentCommandIndex = currentCommandIndex + 1;
+          console.log(`Command ${currentCommandIndex}/${commands.length} completed, moving to next`);
+          return true; // Success
+          
+        } catch (saveError) {
+          const errorMsg = saveError.message || 'Failed to save table';
+          console.error(`Error executing !SAVE command ${currentCommandIndex + 1}:`, errorMsg);
+          
+          // Log the error
+          const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          await handleCommandResult({
+            detail: {
+              naturalLanguage,
+              sql: null,
+              error: errorMsg,
+              result: null,
+              timestamp
+            }
+          });
+          
+          errorMessage = `Error executing !SAVE command ${currentCommandIndex + 1} ("${naturalLanguage}"): ${errorMsg}`;
+          executingCommand = false;
+          return false; // Stop on error
+        }
+      }
 
       // Check if SQL already exists for this command
       let sql = null;

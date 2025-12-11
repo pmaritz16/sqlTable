@@ -1,5 +1,5 @@
-in table "flights", delete all rows where the Date is earlier than Jan 1st, 2025
-[DELETE FROM flights WHERE Date < '2025-01-01']
+!REM in the table flights, delete all rows where Date is before '2025-01-01'
+!REM [DELETE FROM flights WHERE Date < '2025-01-01']
 create a new table "expanded" by joining "flights" to "types" on the common field "Type" 
 [CREATE TABLE expanded AS SELECT * FROM flights INNER JOIN types ON flights.Type = types.Type;]
 to table "expanded", add a new column called "Total"
@@ -38,6 +38,12 @@ in the table TOTALS, set the value of Tailwheel to be the sum of the column Tail
 [UPDATE TOTALS SET Tailwheel = (SELECT SUM(Tailwheel_time) FROM expanded)]
 in the table TOTALS, set the value of Turbine to be the sum of the column Turbine_time in table expanded
 [UPDATE TOTALS SET Turbine = (SELECT SUM(Turbine_time) FROM expanded)]
+group table "expanded" by the column "Type", summing the column "Total" for each type, and place the results in a new table called "TypeSummary", showing only the colums "Type" and "Total"
+[CREATE TABLE TypeSummary AS SELECT Type, SUM(Total) as Total FROM expanded GROUP BY Type;]
+!SAVE TypeSummary typeSummary
+
+
+
 
 
 

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, extname, basename } from 'path';
 import fs from 'fs';
 import os from 'os';
 import http from 'http';
@@ -415,11 +415,21 @@ ipcMain.handle('save-file', async (event, options) => {
 
 ipcMain.handle('write-csv-file', async (event, filePath, content) => {
   try {
-    const fileDir = dirname(filePath);
+    // Append .CSV extension if no extension is provided
+    let finalFilePath = filePath;
+    const ext = extname(filePath);
+    
+    // If no extension (empty string) or just a dot, append .CSV
+    if (!ext || ext === '.') {
+      finalFilePath = filePath + '.CSV';
+      console.log(`No extension provided, appending .CSV: ${finalFilePath}`);
+    }
+    
+    const fileDir = dirname(finalFilePath);
     if (!fs.existsSync(fileDir)) {
       fs.mkdirSync(fileDir, { recursive: true });
     }
-    fs.writeFileSync(filePath, content, 'utf8');
+    fs.writeFileSync(finalFilePath, content, 'utf8');
     return true;
   } catch (error) {
     console.error('Error writing CSV file:', error);
@@ -471,6 +481,22 @@ ipcMain.handle('write-database', async (event, dbPath, buffer) => {
     return true;
   } catch (error) {
     console.error('Error writing database:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('delete-database', async (event, dbPath) => {
+  try {
+    if (fs.existsSync(dbPath)) {
+      fs.unlinkSync(dbPath);
+      console.log(`Deleted database file: ${dbPath}`);
+      return true;
+    } else {
+      console.log(`Database file does not exist: ${dbPath}`);
+      return false; // File doesn't exist, but that's fine
+    }
+  } catch (error) {
+    console.error('Error deleting database:', error);
     throw error;
   }
 });
@@ -547,9 +573,12 @@ ipcMain.handle('get-sql-for-command', async (event, commandText) => {
     // Find the line that matches the command text (trimmed)
     for (let i = 0; i < lines.length; i++) {
       const trimmedLine = lines[i].trim();
+      // Skip !REM lines, !SAVE lines, SQL lines, and empty lines
+      if (trimmedLine.startsWith('!REM') || trimmedLine.startsWith('!SAVE') || trimmedLine.startsWith('[') || trimmedLine.length === 0) {
+        continue;
+      }
       // Match if the line (ignoring leading/trailing whitespace) matches the command
-      // and it's not already a SQL line (starts with [)
-      if (trimmedLine === commandText && !trimmedLine.startsWith('[')) {
+      if (trimmedLine === commandText) {
         // Check if the next line exists and is a SQL line (starts with [ and ends with ])
         if (i + 1 < lines.length) {
           const nextLine = lines[i + 1].trim();
@@ -582,13 +611,16 @@ ipcMain.handle('insert-sql-into-commands-file', async (event, commandText, sql) 
     let content = fs.readFileSync(commandsPath, 'utf8');
     const lines = content.split('\n');
     
-    // Find the line that matches the command text (trimmed, ignoring empty lines and comments)
+    // Find the line that matches the command text (trimmed, ignoring empty lines, comments, !REM lines, and !SAVE lines)
     let foundIndex = -1;
     for (let i = 0; i < lines.length; i++) {
       const trimmedLine = lines[i].trim();
+      // Skip !REM lines, !SAVE lines, SQL lines, and empty lines
+      if (trimmedLine.startsWith('!REM') || trimmedLine.startsWith('!SAVE') || trimmedLine.startsWith('[') || trimmedLine.length === 0) {
+        continue;
+      }
       // Match if the line (ignoring leading/trailing whitespace) matches the command
-      // Also skip if it's already a SQL line (starts with [)
-      if (trimmedLine === commandText && !trimmedLine.startsWith('[')) {
+      if (trimmedLine === commandText) {
         foundIndex = i;
         break;
       }

@@ -1,119 +1,124 @@
-[2025-12-11 03:15:42]
-NL: in table "flights", delete all rows where the Date is earlier than Jan 1st, 2025
-SQL: DELETE FROM flights WHERE Date < '2025-01-01'
-RESULT: Affected 654 row(s)
----
-
-[2025-12-11 03:15:42]
+[2025-12-11 17:53:39]
 NL: create a new table "expanded" by joining "flights" to "types" on the common field "Type"
 SQL: CREATE TABLE expanded AS SELECT * FROM flights INNER JOIN types ON flights.Type = types.Type;
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:43]
+[2025-12-11 17:53:40]
 NL: to table "expanded", add a new column called "Total"
 SQL: ALTER TABLE expanded ADD COLUMN Total REAL;
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:43]
+[2025-12-11 17:53:40]
 NL: in table "expanded", set the value of "Total" to PIC + Dual
 SQL: UPDATE expanded SET Total = PIC + Dual
-RESULT: Affected 1237 row(s)
+RESULT: Affected 1891 row(s)
 ---
 
-[2025-12-11 03:15:43]
+[2025-12-11 17:53:40]
 NL: in table "expanded", add a column called "SEL_time" of type REAL
 SQL: ALTER TABLE expanded ADD COLUMN SEL_time REAL
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:43]
+[2025-12-11 17:53:40]
 NL: in table "expanded" set "SEL_time" value to that of "Total" if field "Class" = "SEL" and if not, then 0
 SQL: UPDATE expanded SET SEL_time = CASE WHEN Class = 'SEL' THEN Total ELSE 0 END
-RESULT: Affected 1237 row(s)
+RESULT: Affected 1891 row(s)
 ---
 
-[2025-12-11 03:15:44]
+[2025-12-11 17:53:41]
 NL: in table "expanded", add a column called "MEL_time" of type REAL
 SQL: ALTER TABLE expanded ADD COLUMN MEL_time REAL
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:44]
+[2025-12-11 17:53:41]
 NL: in table "expanded" set "MEL_time" value to that of "Total" if field "Class" = "MEL" and if not, then 0
 SQL: UPDATE expanded SET MEL_time = CASE WHEN Class = 'MEL' THEN Total ELSE 0 END
-RESULT: Affected 1237 row(s)
+RESULT: Affected 1891 row(s)
 ---
 
-[2025-12-11 03:15:44]
+[2025-12-11 17:53:41]
 NL: in table "expanded", add a column called "Tailwheel_time" of type REAL
 SQL: ALTER TABLE expanded ADD COLUMN Tailwheel_time REAL
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:44]
+[2025-12-11 17:53:41]
 NL: in table "expanded" set "Tailwheel_time" value to that of "Total" if field "Tailwheel" > 0 and if not, then 0
 SQL: UPDATE expanded SET Tailwheel_time = CASE WHEN Tailwheel > 0 THEN Total ELSE 0 END
-RESULT: Affected 1237 row(s)
+RESULT: Affected 1891 row(s)
 ---
 
-[2025-12-11 03:15:45]
+[2025-12-11 17:53:42]
 NL: in table "expanded", add a column called "Turbine_time" of type REAL
 SQL: ALTER TABLE expanded ADD COLUMN Turbine_time REAL
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:45]
+[2025-12-11 17:53:42]
 NL: in table "expanded" set "Turbine_time" value to that of "Total" if field "Turbine" > 0 and if not, then 0
 SQL: UPDATE expanded SET Turbine_time = CASE WHEN Turbine > 0 THEN Total ELSE 0 END
-RESULT: Affected 1237 row(s)
+RESULT: Affected 1891 row(s)
 ---
 
-[2025-12-11 03:15:45]
+[2025-12-11 17:53:42]
 NL: create a new table "TOTALS" with columns, of type REAL, "Total", "PIC", "Dual", "SEL", "MEL", "Tailwheel", "Turbine"
 SQL: CREATE TABLE TOTALS (Total REAL, PIC REAL, Dual REAL, SEL REAL, MEL REAL, Tailwheel REAL, Turbine REAL);
 RESULT: Affected 0 row(s)
 ---
 
-[2025-12-11 03:15:45]
+[2025-12-11 17:53:42]
 NL: in the table TOTALS, create a first row, and set the value of Total in that row to be the sum of the column Total from the table expanded
 SQL: INSERT INTO TOTALS (Total) SELECT SUM(Total) FROM expanded
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:45]
+[2025-12-11 17:53:43]
 NL: in the table TOTALS, set the value of PIC to be the sum of the column PIC in table expanded
 SQL: UPDATE TOTALS SET PIC = (SELECT SUM(PIC) FROM expanded)
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:46]
+[2025-12-11 17:53:43]
 NL: in the table TOTALS, set the value of Dual to be the sum of the column Dual in table expanded
 SQL: UPDATE TOTALS SET Dual = (SELECT SUM(Dual) FROM expanded)
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:46]
+[2025-12-11 17:53:43]
 NL: in the table TOTALS, set the value of SEL to be the sum of the column SEL_time in table expanded
 SQL: UPDATE TOTALS SET SEL = (SELECT SUM(SEL_time) FROM expanded)
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:46]
+[2025-12-11 17:53:43]
 NL: in the table TOTALS, set the value of MEL to be the sum of the column MEL_time in table expanded
 SQL: UPDATE TOTALS SET MEL = (SELECT SUM(MEL_time) FROM expanded)
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:46]
+[2025-12-11 17:53:43]
 NL: in the table TOTALS, set the value of Tailwheel to be the sum of the column Tailwheel_time in table expanded
 SQL: UPDATE TOTALS SET Tailwheel = (SELECT SUM(Tailwheel_time) FROM expanded)
 RESULT: Affected 1 row(s)
 ---
 
-[2025-12-11 03:15:47]
+[2025-12-11 17:53:44]
 NL: in the table TOTALS, set the value of Turbine to be the sum of the column Turbine_time in table expanded
 SQL: UPDATE TOTALS SET Turbine = (SELECT SUM(Turbine_time) FROM expanded)
 RESULT: Affected 1 row(s)
+---
+
+[2025-12-11 17:53:44]
+NL: group table "expanded" by the column "Type", summing the column "Total" for each type, and place the results in a new table called "TypeSummary", showing only the colums "Type" and "Total"
+SQL: CREATE TABLE TypeSummary AS SELECT Type, SUM(Total) as Total FROM expanded GROUP BY Type;
+RESULT: Affected 0 row(s)
+---
+
+[2025-12-11 17:53:44]
+NL: !SAVE TypeSummary typeSummary
+RESULT: Exported table "TypeSummary" (19 row(s)) to typeSummary
 ---
