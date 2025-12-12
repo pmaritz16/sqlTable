@@ -1,4 +1,4 @@
-Type:string, Class:string, Tailwheel:string, Turbine:string
+Type,Class,Tailwheel:boolean,Turbine:boolean
 7ECA,SEL,1,0
 7GCBC,SEL,1,0
 8KCAB,SEL,1,0
@@ -18,4 +18,3 @@ T6D,SEL,1,0
 T6G,SEL,1,0
 X-AEST,MEL,0,1
 Z194,SEL,0,0
-xxxx,MEL,0,0

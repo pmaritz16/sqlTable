@@ -268,9 +268,12 @@ app.whenReady().then(async () => {
     };
   }
   
-  // Send status to renderer when it's ready
+  // Send status to renderer when it's ready - only send if connection failed
   mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.send('llm-status', llmStatus);
+    // Only send status to GUI if there's a connection failure
+    if (!llmStatus.connected) {
+      mainWindow.webContents.send('llm-status', llmStatus);
+    }
   });
 
   // Log any errors from the renderer process
@@ -497,6 +500,18 @@ ipcMain.handle('delete-database', async (event, dbPath) => {
     }
   } catch (error) {
     console.error('Error deleting database:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('restart-app', async (event) => {
+  try {
+    console.log('Restarting application...');
+    app.relaunch();
+    app.exit(0);
+    return true;
+  } catch (error) {
+    console.error('Error restarting app:', error);
     throw error;
   }
 });

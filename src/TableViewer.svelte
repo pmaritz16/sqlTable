@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher, onMount } from 'svelte';
   import TableDisplay from './TableDisplay.svelte';
+  import RowForm from './RowForm.svelte';
   import { CSVExporter } from './csvExporter.js';
 
   export let tables = [];
@@ -8,6 +9,7 @@
   export let dbManager = null;
   export let tableToCsvMap = {};
   export let electronAPI = null;
+  export let modifiedTables = new Set();
 
   const dispatch = createEventDispatcher();
   let tableData = { columns: [], rows: [] };
@@ -16,9 +18,25 @@
   let pageSize = 100;
   let loading = false;
   let exporting = false;
+  
+  // Row form state
+  let showRowForm = false;
+  let editingRow = null;
+  let tableSchema = [];
 
   $: if (currentTable && dbManager) {
     loadTableData();
+    loadTableSchema();
+  }
+
+  async function loadTableSchema() {
+    if (!currentTable || !dbManager) return;
+    try {
+      tableSchema = dbManager.getTableSchema(currentTable);
+    } catch (error) {
+      console.error('Error loading table schema:', error);
+      tableSchema = [];
+    }
   }
 
   // Debug: log when currentTable changes
@@ -52,6 +70,10 @@
   function handleRefresh() {
     loadTableData();
     dispatch('refresh');
+  }
+
+  async function handleUpdateAndRestart() {
+    dispatch('updateAndRestart');
   }
 
   function handlePreviousPage() {
@@ -118,6 +140,106 @@
       exporting = false;
     }
   }
+
+  function handleAddRow() {
+    editingRow = null;
+    showRowForm = true;
+  }
+
+  function handleEditRow(event) {
+    editingRow = event.detail;
+    showRowForm = true;
+  }
+
+  function handleDeleteRow(event) {
+    const row = event.detail;
+    if (!row || !row.rowid) {
+      alert('Error: Cannot identify row to delete');
+      return;
+    }
+
+    deleteRow(row.rowid);
+  }
+
+  async function deleteRow(rowid) {
+    if (!currentTable || !dbManager) return;
+
+    try {
+      dbManager.deleteRow(currentTable, rowid);
+      
+      // Save database
+      const dbPath = await electronAPI.getDefaultDatabasePath();
+      await dbManager.saveToFile(dbPath, electronAPI);
+      
+      // Refresh table data
+      await loadTableData();
+      dispatch('refresh');
+      
+      // Mark table as modified
+      dispatch('tableModified', { table: currentTable });
+      
+      alert('Row deleted successfully');
+    } catch (error) {
+      console.error('Error deleting row:', error);
+      alert(`Error deleting row: ${error.message}`);
+    }
+  }
+
+  async function handleFormSave(event) {
+    const { rowData, isEdit, insertPosition } = event.detail;
+    
+    if (!currentTable || !dbManager) return;
+
+    try {
+      if (isEdit) {
+        // Update existing row
+        if (!rowData.rowid) {
+          alert('Error: Cannot identify row to update');
+          return;
+        }
+        dbManager.updateRow(currentTable, rowData.rowid, rowData, tableSchema);
+      } else {
+        // Insert new row at specified position
+        const position = insertPosition || 'end';
+        dbManager.insertRow(currentTable, rowData, tableSchema, position);
+        
+        if (position === 'beginning') {
+          // New row is at the beginning, go to first page
+          currentPage = 0;
+        } else {
+          // New row is at the end, calculate which page it's on
+          const newRowCount = dbManager.getTableRowCount(currentTable);
+          const newPage = Math.ceil(newRowCount / pageSize) - 1;
+          currentPage = Math.max(0, newPage);
+        }
+      }
+      
+      // Save database
+      const dbPath = await electronAPI.getDefaultDatabasePath();
+      await dbManager.saveToFile(dbPath, electronAPI);
+      
+      // Refresh table data
+      await loadTableData();
+      dispatch('refresh');
+      
+      // Mark table as modified
+      dispatch('tableModified', { table: currentTable });
+      
+      // Close form
+      showRowForm = false;
+      editingRow = null;
+      
+      alert(isEdit ? 'Row updated successfully' : 'Row added successfully');
+    } catch (error) {
+      console.error('Error saving row:', error);
+      alert(`Error saving row: ${error.message}`);
+    }
+  }
+
+  function handleFormCancel() {
+    showRowForm = false;
+    editingRow = null;
+  }
 </script>
 
 <div class="table-viewer">
@@ -139,7 +261,24 @@
       </select>
     </div>
     <div class="header-right">
+      {#if modifiedTables.size > 0}
+        <button 
+          class="update-button" 
+          on:click={handleUpdateAndRestart} 
+          title="Save modified tables to CSV files and restart"
+        >
+          Update ({modifiedTables.size})
+        </button>
+      {/if}
       {#if currentTable && electronAPI}
+        <button 
+          class="add-row-button" 
+          on:click={handleAddRow} 
+          title="Add new row"
+          disabled={loading || !electronAPI}
+        >
+          + Add Row
+        </button>
         <button 
           class="export-button" 
           on:click={handleExport} 
@@ -168,7 +307,11 @@
         <span>Page: <strong>{currentPage + 1}</strong> of <strong>{maxPage + 1}</strong></span>
       </div>
       
-      <TableDisplay {tableData} />
+      <TableDisplay 
+        {tableData} 
+        on:edit={handleEditRow}
+        on:delete={handleDeleteRow}
+      />
       
       <div class="pagination">
         <button 
@@ -190,11 +333,29 @@
         </button>
       </div>
     {:else if currentTable}
-      <div class="empty-message">Table is empty</div>
+      <div class="empty-message">
+        Table is empty
+        {#if electronAPI}
+          <button class="add-row-button" on:click={handleAddRow} style="margin-top: 16px;">
+            + Add First Row
+          </button>
+        {/if}
+      </div>
     {:else}
       <div class="empty-message">Select a table to view</div>
     {/if}
   </div>
+  
+  {#if showRowForm && currentTable}
+    <RowForm
+      columns={tableData.columns}
+      schema={tableSchema}
+      rowData={editingRow}
+      open={showRowForm}
+      on:save={handleFormSave}
+      on:cancel={handleFormCancel}
+    />
+  {/if}
 </div>
 
 <style>
@@ -262,6 +423,57 @@
   }
 
   .refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .update-button {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+  }
+
+  .update-button:hover {
+    background: #d97706;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .add-row-button {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+
+  .add-row-button:hover:not(:disabled) {
+    background: #5568d3;
+  }
+
+  .add-row-button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }

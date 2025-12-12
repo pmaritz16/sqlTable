@@ -30,7 +30,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readCommandsFile: () => ipcRenderer.invoke('read-commands-file'),
   insertSqlIntoCommandsFile: (commandText, sql) => ipcRenderer.invoke('insert-sql-into-commands-file', commandText, sql),
   getSqlForCommand: (commandText) => ipcRenderer.invoke('get-sql-for-command', commandText),
-  deleteDatabase: (path) => ipcRenderer.invoke('delete-database', path)
+  deleteDatabase: (path) => ipcRenderer.invoke('delete-database', path),
+  restartApp: () => ipcRenderer.invoke('restart-app')
 });
 
 console.log('Preload script loaded, electronAPI exposed');

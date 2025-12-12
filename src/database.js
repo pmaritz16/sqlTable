@@ -125,16 +125,19 @@ class DatabaseManager {
       return { columns: [], rows: [] };
     }
 
-    const result = this.db.exec(`SELECT * FROM "${tableName}" LIMIT ${limit} OFFSET ${offset}`);
+    // Include ROWID for row identification, order by rowid ASC to preserve CSV file order
+    const result = this.db.exec(`SELECT rowid, * FROM "${tableName}" ORDER BY rowid ASC LIMIT ${limit} OFFSET ${offset}`);
     
     if (result.length === 0) {
       return { columns: [], rows: [] };
     }
 
-    const columns = result[0].columns;
+    const allColumns = result[0].columns;
+    // Filter out 'rowid' from display columns but keep it in row data
+    const columns = allColumns.filter(col => col !== 'rowid');
     const rows = result[0].values.map(row => {
       const obj = {};
-      columns.forEach((col, index) => {
+      allColumns.forEach((col, index) => {
         obj[col] = row[index];
       });
       return obj;
@@ -254,6 +257,165 @@ class DatabaseManager {
     } catch (error) {
       console.error('Error getting table schema:', error);
       return [];
+    }
+  }
+
+  deleteRow(tableName, rowid) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    try {
+      const deleteSQL = `DELETE FROM "${tableName}" WHERE rowid = ?`;
+      const stmt = this.db.prepare(deleteSQL);
+      stmt.run([rowid]);
+      stmt.free();
+      return true;
+    } catch (error) {
+      throw new Error(`Error deleting row: ${error.message}`);
+    }
+  }
+
+  updateRow(tableName, rowid, rowData, schema) {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    try {
+      // Build UPDATE statement
+      const columns = Object.keys(rowData).filter(key => key !== 'rowid');
+      const setClause = columns.map(col => `"${col}" = ?`).join(', ');
+      const updateSQL = `UPDATE "${tableName}" SET ${setClause} WHERE rowid = ?`;
+      
+      const stmt = this.db.prepare(updateSQL);
+      
+      // Get schema info for type conversion
+      const schemaMap = {};
+      if (schema) {
+        schema.forEach(col => {
+          schemaMap[col.name] = col;
+        });
+      }
+      
+      // Prepare values with type conversion
+      const values = columns.map(col => {
+        const value = rowData[col];
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        // Convert boolean to integer for SQLite
+        const colInfo = schemaMap[col];
+        if (colInfo && colInfo.type === 'INTEGER' && (value === true || value === false || value === 'true' || value === 'false')) {
+          return (value === true || value === 'true') ? 1 : 0;
+        }
+        return value;
+      });
+      
+      values.push(rowid); // Add rowid for WHERE clause
+      stmt.run(values);
+      stmt.free();
+      return true;
+    } catch (error) {
+      throw new Error(`Error updating row: ${error.message}`);
+    }
+  }
+
+  insertRow(tableName, rowData, schema, position = 'end') {
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+
+    try {
+      // Remove rowid from rowData if present (it's auto-generated)
+      const insertData = { ...rowData };
+      delete insertData.rowid;
+      
+      const columns = Object.keys(insertData);
+      const columnNames = columns.map(col => `"${col}"`).join(', ');
+      const placeholders = columns.map(() => '?').join(', ');
+      
+      // Get schema info for type conversion
+      const schemaMap = {};
+      if (schema) {
+        schema.forEach(col => {
+          schemaMap[col.name] = col;
+        });
+      }
+      
+      // Prepare values with type conversion
+      const values = columns.map(col => {
+        const value = insertData[col];
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+        // Convert boolean to integer for SQLite
+        const colInfo = schemaMap[col];
+        if (colInfo && colInfo.type === 'INTEGER' && (value === true || value === false || value === 'true' || value === 'false')) {
+          return (value === true || value === 'true') ? 1 : 0;
+        }
+        return value;
+      });
+
+      if (position === 'beginning') {
+        // To insert at the beginning, we need to use a temporary table approach
+        // to preserve the rowid ordering
+        this.insertRowAtBeginning(tableName, columns, values, schema);
+      } else {
+        // Normal insert at end
+        const insertSQL = `INSERT INTO "${tableName}" (${columnNames}) VALUES (${placeholders})`;
+        const stmt = this.db.prepare(insertSQL);
+        stmt.run(values);
+        stmt.free();
+      }
+      
+      return true;
+    } catch (error) {
+      throw new Error(`Error inserting row: ${error.message}`);
+    }
+  }
+
+  insertRowAtBeginning(tableName, columns, newRowValues, schema) {
+    // Use a temporary table to reorder rows
+    const tempTableName = `_temp_${tableName}_${Date.now()}`;
+    
+    try {
+      // Get table schema
+      const tableInfo = this.db.exec(`PRAGMA table_info("${tableName}")`);
+      if (tableInfo.length === 0) {
+        throw new Error('Table not found');
+      }
+
+      // Create temporary table with same structure
+      const createTempSQL = `CREATE TABLE "${tempTableName}" AS SELECT * FROM "${tableName}" WHERE 1=0`;
+      this.db.run(createTempSQL);
+
+      // Insert new row first into temp table
+      const columnNames = columns.map(col => `"${col}"`).join(', ');
+      const placeholders = columns.map(() => '?').join(', ');
+      const insertSQL = `INSERT INTO "${tempTableName}" (${columnNames}) VALUES (${placeholders})`;
+      const stmt = this.db.prepare(insertSQL);
+      stmt.run(newRowValues);
+      stmt.free();
+
+      // Copy all existing rows from original table to temp table
+      const allColumns = tableInfo[0].values.map(row => row[1]); // Column names
+      const allColumnNames = allColumns.map(col => `"${col}"`).join(', ');
+      const copySQL = `INSERT INTO "${tempTableName}" (${allColumnNames}) SELECT ${allColumnNames} FROM "${tableName}" ORDER BY rowid ASC`;
+      this.db.run(copySQL);
+
+      // Drop original table
+      this.db.run(`DROP TABLE "${tableName}"`);
+
+      // Rename temp table to original name
+      this.db.run(`ALTER TABLE "${tempTableName}" RENAME TO "${tableName}"`);
+    } catch (error) {
+      // Clean up temp table if it exists
+      try {
+        this.db.run(`DROP TABLE IF EXISTS "${tempTableName}"`);
+      } catch (cleanupError) {
+        // Ignore cleanup errors
+      }
+      throw error;
     }
   }
 
